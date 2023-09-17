@@ -25,6 +25,13 @@ func setupRouter() *gin.Engine {
 	r.POST("/storage/:site/:dataset", DatasetPostHandler)
 	r.POST("/storage/:site/:dataset/:file", FilePostHandler)
 
+	// PUT routes
+	r.PUT("/storage/:site/:dataset", DatasetPutHandler)
+	r.PUT("/storage/:site/:dataset/:file", FilePutHandler)
+
+	// DELETE routes
+	r.DELETE("/storage/:site/:dataset", DatasetDeleteHandler)
+	r.DELETE("/storage/:site/:dataset/:file", FileDeleteHandler)
 	return r
 }
 

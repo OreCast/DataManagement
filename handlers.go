@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GET handlers
+
 // StorageHandler provides access to GET /storage end-point
 func StorageHandler(c *gin.Context) {
 }
@@ -20,10 +22,32 @@ func DatasetHandler(c *gin.Context) {
 func FileHandler(c *gin.Context) {
 }
 
+// POST handlers
+
 // DatasetPostHandler provides access to POST /storate/:site/:dataset end-point
 func DatasetPostHandler(c *gin.Context) {
 }
 
 // DatasetPostHandler provides access to POST /storate/:site/:dataset end-point
 func FilePostHandler(c *gin.Context) {
+}
+
+// PUT handlers
+
+// DatasetPutHandler provides access to PUT /storate/:site/:dataset end-point
+func DatasetPutHandler(c *gin.Context) {
+}
+
+// DatasetPutHandler provides access to PUT /storate/:site/:dataset end-point
+func FilePutHandler(c *gin.Context) {
+}
+
+// DELETE handlers
+
+// DatasetDeleteHandler provides access to DELETE /storate/:site/:dataset end-point
+func DatasetDeleteHandler(c *gin.Context) {
+}
+
+// DatasetDeleteHandler provides access to DELETE /storate/:site/:dataset end-point
+func FileDeleteHandler(c *gin.Context) {
 }

@@ -19,6 +19,18 @@ type Configuration struct {
 	LogFile string `json:"log_file"` // server log file
 	Port    int    `json:"port"`     // server port number
 	Verbose int    `json:"verbose"`  // verbose output
+
+	// server parts
+	RootCAs       string   `json:"rootCAs"`      // server Root CAs path
+	ServerCrt     string   `json:"server_cert"`  // server certificate
+	ServerKey     string   `json:"server_key"`   // server certificate
+	DomainNames   []string `json:"domain_names"` // LetsEncrypt domain names
+	LimiterPeriod string   `json:"rate"`         // limiter rate value
+
+	// OreCast parts
+	DiscoveryPassword string `json:"discovery_secret"` // data-discovery password
+	DiscoveryCipher   string `json:"discovery_cipher"` // data-discovery cipher
+	DiscoveryURL      string `json:"discovery_url"`    // data-discovery URL
 }
 
 // Config variable represents configuration object
