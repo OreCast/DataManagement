@@ -17,6 +17,26 @@ type S3 struct {
 	UseSSL       bool
 }
 
+// helper function to get s3 minio client for given site
+func s3client(site string) (*minio.Client, error) {
+	// get s3 site object without any buckets info
+	siteObj := S3Content(site, "")
+	if Config.Verbose > 0 {
+		log.Println("INFO: s3 object %+v", siteObj)
+	}
+	s3 := siteObj.S3
+
+	// Initialize minio client object.
+	minioClient, err := minio.New(s3.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(s3.AccessKey, s3.AccessSecret, ""),
+		Secure: s3.UseSSL,
+	})
+	if err != nil {
+		log.Printf("ERROR: unable to initialize s3 endpoint %s, error %v", s3.Endpoint, err)
+	}
+	return minioClient, err
+}
+
 func buckets(s3 S3, bucket string) []string {
 	var out []string
 	ctx := context.Background()
@@ -50,7 +70,7 @@ func buckets(s3 S3, bucket string) []string {
 	})
 	for object := range objectCh {
 		if object.Err != nil {
-			log.Println("ERROR", object.Err)
+			log.Println("ERROR: unable to list objects in a bucket, error %v", object.Err)
 			return out
 		}
 		obj := fmt.Sprintf("%v %s %10d %s\n", object.LastModified, object.ETag, object.Size, object.Key)
@@ -60,13 +80,71 @@ func buckets(s3 S3, bucket string) []string {
 }
 
 func createBucket(site, bucket string) error {
-	return nil
+	// get s3 site object without any buckets info
+	minioClient, err := s3client(site)
+	if err != nil {
+		log.Printf("ERROR: unable to initialize minio client for site %s, error %v", site, err)
+		return err
+	}
+	ctx := context.Background()
+
+	// create new bucket on site s3 storage
+	//     err = minioClient.MakeBucket(ctx, bucket, minio.MakeBucketOptions{Region: location})
+	err = minioClient.MakeBucket(ctx, bucket, minio.MakeBucketOptions{})
+	if err != nil {
+		// Check to see if we already own this bucket (which happens if you run this twice)
+		exists, errBucketExists := minioClient.BucketExists(ctx, bucket)
+		if errBucketExists == nil && exists {
+			if Config.Verbose > 0 {
+				log.Printf("iWARNING: we already own %s\n", bucket)
+			}
+			return nil
+		} else {
+			log.Printf("ERROR: unable to create bucket, error %v", err)
+		}
+	} else {
+		if Config.Verbose > 0 {
+			log.Printf("Successfully created %s\n", bucket)
+		}
+	}
+	return err
 }
 func deleteBucket(site, bucket string) error {
-	return nil
+	minioClient, err := s3client(site)
+	if err != nil {
+		log.Printf("ERROR: unable to initialize minio client for site %s, error", site, err)
+		return err
+	}
+	ctx := context.Background()
+	err = minioClient.RemoveBucket(ctx, bucket)
+	if err != nil {
+		log.Printf("ERROR: unable to remove bucket %s, error, %v", bucket, err)
+	}
+	return err
 }
 func uploadFile(site, bucket, file string, data []byte) error {
-	return nil
+	minioClient, err := s3client(site)
+	if err != nil {
+		log.Printf("ERROR: unable to initialize minio client for site %s, error", site, err)
+		return err
+	}
+	ctx := context.Background()
+
+	// Upload the zip file
+	objectName := "golden-oldies.zip"
+	filePath := "/tmp/golden-oldies.zip"
+	contentType := "application/zip"
+
+	// Upload the zip file with FPutObject
+	info, err := minioClient.FPutObject(ctx, bucket, objectName, filePath, minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		log.Printf("ERROR: fail to upload file object, error %v", err)
+	} else {
+		if Config.Verbose > 0 {
+			log.Println("INFO: upload file", info)
+		}
+	}
+	return err
 }
 func deleteFile(site, bucket, file string) error {
 	return nil
