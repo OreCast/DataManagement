@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 
 	minio "github.com/minio/minio-go/v7"
@@ -96,7 +97,7 @@ func createBucket(site, bucket string) error {
 		exists, errBucketExists := minioClient.BucketExists(ctx, bucket)
 		if errBucketExists == nil && exists {
 			if Config.Verbose > 0 {
-				log.Printf("iWARNING: we already own %s\n", bucket)
+				log.Printf("WARNING: we already own %s\n", bucket)
 			}
 			return nil
 		} else {
@@ -122,7 +123,7 @@ func deleteBucket(site, bucket string) error {
 	}
 	return err
 }
-func uploadFile(site, bucket, file string, data []byte) error {
+func uploadFile(site, bucket, objectName, contentType string, reader io.Reader, size int64) error {
 	minioClient, err := s3client(site)
 	if err != nil {
 		log.Printf("ERROR: unable to initialize minio client for site %s, error", site, err)
@@ -130,13 +131,18 @@ func uploadFile(site, bucket, file string, data []byte) error {
 	}
 	ctx := context.Background()
 
-	// Upload the zip file
-	objectName := "golden-oldies.zip"
-	filePath := "/tmp/golden-oldies.zip"
-	contentType := "application/zip"
-
-	// Upload the zip file with FPutObject
-	info, err := minioClient.FPutObject(ctx, bucket, objectName, filePath, minio.PutObjectOptions{ContentType: contentType})
+	// Upload the zip file with PutObject
+	options := minio.PutObjectOptions{}
+	if contentType != "" {
+		options = minio.PutObjectOptions{ContentType: contentType}
+	}
+	info, err := minioClient.PutObject(
+		ctx,
+		bucket,
+		objectName,
+		reader,
+		size,
+		options)
 	if err != nil {
 		log.Printf("ERROR: fail to upload file object, error %v", err)
 	} else {
