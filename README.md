@@ -20,9 +20,4 @@ curl http://localhost:8340/storage/cornell/s3-bucket/archive.zip > archive.zip
 
 # delete file
 curl -X DELETE http://localhost:8340/storage/cornell/s3-bucket/archive.zip
-
-# update file
-curl -x PUT http://localhost:8340/storage/cornell/s3-bucket/archive.zip \
-  -f "file=@/path/test.zip" \
-  -h "content-type: multipart/form-data"
 ```
