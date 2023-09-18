@@ -22,6 +22,9 @@ type Site struct {
 func sites() []Site {
 	var out []Site
 	rurl := fmt.Sprintf("%s/sites", Config.DiscoveryURL)
+	if Config.Verbose > 0 {
+		log.Println("query Discovery service", rurl)
+	}
 	resp, err := http.Get(rurl)
 	if err != nil {
 		log.Println("ERROR:", err)
@@ -39,8 +42,8 @@ func sites() []Site {
 
 // SiteObject represents site object
 type SiteObject struct {
-	Name     string
-	Datasets []string
+	Site    string   `json:"site"`
+	Buckets []string `json:"buckets"`
 }
 
 // DiscoveryRecord represents structure of data discovery record
@@ -53,10 +56,14 @@ type DiscoveryRecord struct {
 	UseSSL       bool   `json:"use_ssl"`
 }
 
-func site(site, bucket string) SiteObject {
+// S3Content provides content on given site and bucket
+func S3Content(site, bucket string) SiteObject {
+	if Config.Verbose > 0 {
+		log.Printf("looking for site:%s bucket:%s", site, bucket)
+	}
 	surl := fmt.Sprintf("%s/sites", Config.DiscoveryURL)
 	if Config.Verbose > 0 {
-		log.Println("query", surl)
+		log.Println("query Discovery service", surl)
 	}
 	resp, err := http.Get(surl)
 	var siteObj SiteObject
@@ -85,7 +92,9 @@ func site(site, bucket string) SiteObject {
 		if rec.Name == site {
 			log.Printf("INFO: found %s in DataDiscovery records, will access its s3 via %s", rec.Name, rec.URL)
 			// bingo: we got desired site, now we can query its s3 storage for datasets
-			log.Println("###", rec.AccessKey, Config.DiscoveryPassword, Config.DiscoveryCipher)
+			if Config.Verbose > 0 {
+				log.Println("###", rec.AccessKey, Config.DiscoveryPassword, Config.DiscoveryCipher)
+			}
 			akey, err := decrypt(rec.AccessKey, Config.DiscoveryPassword, Config.DiscoveryCipher)
 			if err != nil {
 				log.Printf("ERROR: unable to decrypt data discovery access key, error %v", err)
@@ -108,8 +117,8 @@ func site(site, bucket string) SiteObject {
 				log.Printf("### will access %+v", s3)
 			}
 			obj := SiteObject{
-				Name:     site,
-				Datasets: datasets(s3, bucket),
+				Site:    site,
+				Buckets: buckets(s3, bucket),
 			}
 			return obj
 		}

@@ -18,20 +18,20 @@ func setupRouter() *gin.Engine {
 	// GET routes
 	r.GET("/storage", StorageHandler)
 	r.GET("/storage/:site", SiteHandler)
-	r.GET("/storage/:site/:dataset", DatasetHandler)
-	r.GET("/storage/:site/:dataset/:file", FileHandler)
+	r.GET("/storage/:site/:bucket", BucketHandler)
+	r.GET("/storage/:site/:bucket/:file", FileHandler)
 
 	// POST routes
-	r.POST("/storage/:site/:dataset", DatasetPostHandler)
-	r.POST("/storage/:site/:dataset/:file", FilePostHandler)
+	r.POST("/storage/:site/:bucket", BucketPostHandler)
+	r.POST("/storage/:site/:bucket/:file", FilePostHandler)
 
 	// PUT routes
-	r.PUT("/storage/:site/:dataset", DatasetPutHandler)
-	r.PUT("/storage/:site/:dataset/:file", FilePutHandler)
+	r.PUT("/storage/:site/:bucket", BucketPutHandler)
+	r.PUT("/storage/:site/:bucket/:file", FilePutHandler)
 
 	// DELETE routes
-	r.DELETE("/storage/:site/:dataset", DatasetDeleteHandler)
-	r.DELETE("/storage/:site/:dataset/:file", FileDeleteHandler)
+	r.DELETE("/storage/:site/:bucket", BucketDeleteHandler)
+	r.DELETE("/storage/:site/:bucket/:file", FileDeleteHandler)
 	return r
 }
 

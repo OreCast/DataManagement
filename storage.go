@@ -17,7 +17,7 @@ type S3 struct {
 	UseSSL       bool
 }
 
-func datasets(s3 S3, bucket string) []string {
+func buckets(s3 S3, bucket string) []string {
 	var out []string
 	ctx := context.Background()
 	// Initialize minio client object.
@@ -57,4 +57,20 @@ func datasets(s3 S3, bucket string) []string {
 		out = append(out, obj)
 	}
 	return out
+}
+
+func createBucket(site, bucket string) error {
+	return nil
+}
+func deleteBucket(site, bucket string) error {
+	return nil
+}
+func uploadFile(site, bucket, file string, data []byte) error {
+	return nil
+}
+func deleteFile(site, bucket, file string) error {
+	return nil
+}
+func updateFile(site, bucket, file string, data []byte) error {
+	return nil
 }
