@@ -22,7 +22,7 @@ type S3 struct {
 func s3client(site string) (*minio.Client, error) {
 	// get s3 site object without any buckets info
 	siteObj := S3Content(site, "")
-	if Config.Verbose > 0 {
+	if Config.Verbose > 1 {
 		log.Println("INFO: s3 object %+v", siteObj)
 	}
 	s3 := siteObj.S3
@@ -123,7 +123,7 @@ func deleteBucket(site, bucket string) error {
 	}
 	return err
 }
-func uploadFile(site, bucket, objectName, contentType string, reader io.Reader, size int64) error {
+func uploadObject(site, bucket, objectName, contentType string, reader io.Reader, size int64) error {
 	minioClient, err := s3client(site)
 	if err != nil {
 		log.Printf("ERROR: unable to initialize minio client for site %s, error", site, err)
@@ -157,4 +157,25 @@ func deleteFile(site, bucket, file string) error {
 }
 func updateFile(site, bucket, file string, data []byte) error {
 	return nil
+}
+func getObject(site, bucket, objectName string) ([]byte, error) {
+	minioClient, err := s3client(site)
+	if err != nil {
+		log.Printf("ERROR: unable to initialize minio client for site %s, error", site, err)
+		return []byte{}, err
+	}
+	ctx := context.Background()
+
+	// Upload the zip file with PutObject
+	options := minio.GetObjectOptions{}
+	object, err := minioClient.GetObject(
+		ctx,
+		bucket,
+		objectName,
+		options)
+	if err != nil {
+		log.Printf("ERROR: fail to download file object, error %v", err)
+	}
+	data, err := io.ReadAll(object)
+	return data, err
 }
