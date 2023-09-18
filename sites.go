@@ -41,6 +41,7 @@ func sites() []Site {
 
 // SiteObject represents site object
 type SiteObject struct {
+	S3      S3
 	Site    string   `json:"site"`
 	Buckets []string `json:"buckets"`
 }
@@ -113,10 +114,11 @@ func S3Content(site, bucket string) SiteObject {
 				UseSSL:       rec.UseSSL,
 			}
 			if Config.Verbose > 0 {
-				log.Printf("### will access %+v", s3)
+				log.Printf("INFO: accessing %+v", s3)
 			}
 			obj := SiteObject{
 				Site:    site,
+				S3:      s3,
 				Buckets: buckets(s3, bucket),
 			}
 			return obj
