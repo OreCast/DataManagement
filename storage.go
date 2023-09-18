@@ -127,11 +127,11 @@ func deleteBucket(site, bucket string) error {
 }
 
 // helper function to upload given object to site's S3 store
-func uploadObject(site, bucket, objectName, contentType string, reader io.Reader, size int64) error {
+func uploadObject(site, bucket, objectName, contentType string, reader io.Reader, size int64) (minio.UploadInfo, error) {
 	minioClient, err := s3client(site)
 	if err != nil {
 		log.Printf("ERROR: unable to initialize minio client for site %s, error", site, err)
-		return err
+		return minio.UploadInfo{}, err
 	}
 	ctx := context.Background()
 
@@ -154,7 +154,7 @@ func uploadObject(site, bucket, objectName, contentType string, reader io.Reader
 			log.Println("INFO: upload file", info)
 		}
 	}
-	return err
+	return info, err
 }
 
 // helper function to delete object from site S3 storage
@@ -183,11 +183,6 @@ func deleteObject(site, bucket, objectName, versionId string) error {
 		log.Printf("ERROR: fail to delete file object, error %v", err)
 	}
 	return err
-}
-
-// helper function to update given object in site's S3 storage
-func updateFile(site, bucket, file string, data []byte) error {
-	return nil
 }
 
 // helper function to get given object from site's S3 storage
