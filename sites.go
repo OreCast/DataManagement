@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -95,13 +94,13 @@ func S3Content(site, bucket string) SiteObject {
 			if Config.Verbose > 0 {
 				log.Println("###", rec.AccessKey, Config.DiscoveryPassword, Config.DiscoveryCipher)
 			}
-			akey, err := decrypt(rec.AccessKey, Config.DiscoveryPassword, Config.DiscoveryCipher)
+			akey, err := cryptoutils.HexDecrypt(rec.AccessKey, Config.DiscoveryPassword, Config.DiscoveryCipher)
 			if err != nil {
 				log.Printf("ERROR: unable to decrypt data discovery access key, error %v", err)
 				return siteObj
 
 			}
-			apwd, err := decrypt(rec.AccessSecret, Config.DiscoveryPassword, Config.DiscoveryCipher)
+			apwd, err := cryptoutils.HexDecrypt(rec.AccessSecret, Config.DiscoveryPassword, Config.DiscoveryCipher)
 			if err != nil {
 				log.Printf("ERROR: unable to decrypt data discovery acess secret, error %v", err)
 				return siteObj
@@ -124,19 +123,4 @@ func S3Content(site, bucket string) SiteObject {
 		}
 	}
 	return siteObj
-}
-
-// helper function to decrypt site hex encoded cipher string
-func decrypt(entry, salt, cipher string) (string, error) {
-	src := []byte(entry)
-	dst := make([]byte, hex.DecodedLen(len(src)))
-	n, err := hex.Decode(dst, src)
-	if err != nil {
-		return "", err
-	}
-	data, err := cryptoutils.Decrypt(dst[:n], salt, cipher)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
 }
