@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -54,8 +53,13 @@ func BucketHandler(c *gin.Context) {
 func FileHandler(c *gin.Context) {
 	var params ObjectParams
 	if err := c.ShouldBindUri(&params); err == nil {
-		data := S3Content(params.Site, params.Bucket)
-		c.JSON(200, gin.H{"status": "ok", "data": data})
+		if data, err := getObject(params.Site, params.Bucket, params.Object); err == nil {
+			header := fmt.Sprintf("attachment; filename=%s", params.Object)
+			c.Header("Content-Disposition", header)
+			c.Data(http.StatusOK, "application/octet-stream", data)
+		} else {
+			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
+		}
 	} else {
 		c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 	}
@@ -105,24 +109,22 @@ func FilePostHandler(c *gin.Context) {
 		log.Printf("INFO: uploading file %s", file.Filename)
 
 		// Upload the file to specific dst.
-		src, err := file.Open()
+		reader, err := file.Open()
 		if err != nil {
 			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 			return
 		}
-		defer src.Close()
-		// TODO: may be we should not read at once if we'll deal with large files
-		// Implemenent proper buffered read
-		data, err := io.ReadAll(src)
-		if err != nil {
-			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
-			return
-		}
+		defer reader.Close()
 		size := file.Size
-		reader := bytes.NewReader(data)
 		ctype := "" // TODO: decide on how to read content-type
 
-		if err := uploadFile(params.Site, params.Bucket, params.Object, ctype, reader, size); err == nil {
+		if err := uploadObject(
+			params.Site,
+			params.Bucket,
+			params.Object,
+			ctype,
+			reader,
+			size); err == nil {
 			msg := fmt.Sprintf("File %s/%s/%s uploaded successfully", params.Site, params.Bucket, params.Object)
 			c.JSON(200, gin.H{"status": "ok", "msg": msg})
 		} else {
