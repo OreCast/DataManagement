@@ -183,7 +183,8 @@ func BucketDeleteHandler(c *gin.Context) {
 func FileDeleteHandler(c *gin.Context) {
 	var params ObjectParams
 	if err := c.ShouldBindUri(&params); err == nil {
-		if err := deleteFile(params.Site, params.Bucket, params.Object); err == nil {
+		var versionId string // TODO: in a future we may need to handle different version of objects
+		if err := deleteObject(params.Site, params.Bucket, params.Object, versionId); err == nil {
 			msg := fmt.Sprintf("File %s/%s/%s deleted successfully", params.Site, params.Bucket, params.Object)
 			c.JSON(200, gin.H{"status": "ok", "msg": msg})
 		} else {

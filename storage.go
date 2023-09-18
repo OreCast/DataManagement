@@ -38,6 +38,7 @@ func s3client(site string) (*minio.Client, error) {
 	return minioClient, err
 }
 
+// helper function to provide list of buckets in S3 store
 func buckets(s3 S3, bucket string) []string {
 	var out []string
 	ctx := context.Background()
@@ -80,6 +81,7 @@ func buckets(s3 S3, bucket string) []string {
 	return out
 }
 
+// helper function to create new bucket in site's S3 store
 func createBucket(site, bucket string) error {
 	// get s3 site object without any buckets info
 	minioClient, err := s3client(site)
@@ -123,6 +125,8 @@ func deleteBucket(site, bucket string) error {
 	}
 	return err
 }
+
+// helper function to upload given object to site's S3 store
 func uploadObject(site, bucket, objectName, contentType string, reader io.Reader, size int64) error {
 	minioClient, err := s3client(site)
 	if err != nil {
@@ -152,12 +156,41 @@ func uploadObject(site, bucket, objectName, contentType string, reader io.Reader
 	}
 	return err
 }
-func deleteFile(site, bucket, file string) error {
-	return nil
+
+// helper function to delete object from site S3 storage
+func deleteObject(site, bucket, objectName, versionId string) error {
+	minioClient, err := s3client(site)
+	if err != nil {
+		log.Printf("ERROR: unable to initialize minio client for site %s, error", site, err)
+		return err
+	}
+	ctx := context.Background()
+
+	// remove given object from our s3 store
+	options := minio.RemoveObjectOptions{
+		// Set the bypass governance header to delete an object locked with GOVERNANCE mode
+		GovernanceBypass: true,
+	}
+	if versionId != "" {
+		options.VersionID = versionId
+	}
+	err = minioClient.RemoveObject(
+		ctx,
+		bucket,
+		objectName,
+		options)
+	if err != nil {
+		log.Printf("ERROR: fail to delete file object, error %v", err)
+	}
+	return err
 }
+
+// helper function to update given object in site's S3 storage
 func updateFile(site, bucket, file string, data []byte) error {
 	return nil
 }
+
+// helper function to get given object from site's S3 storage
 func getObject(site, bucket, objectName string) ([]byte, error) {
 	minioClient, err := s3client(site)
 	if err != nil {
