@@ -25,10 +25,6 @@ func setupRouter() *gin.Engine {
 	r.POST("/storage/:site/:bucket", BucketPostHandler)
 	r.POST("/storage/:site/:bucket/:object", FilePostHandler)
 
-	// PUT routes
-	r.PUT("/storage/:site/:bucket", BucketPutHandler)
-	r.PUT("/storage/:site/:bucket/:object", FilePutHandler)
-
 	// DELETE routes
 	r.DELETE("/storage/:site/:bucket", BucketDeleteHandler)
 	r.DELETE("/storage/:site/:bucket/:object", FileDeleteHandler)

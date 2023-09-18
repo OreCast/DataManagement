@@ -8,26 +8,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GET handlers
+// SiteParams represents site URI parameter for /storage/:site end-point
 type SiteParams struct {
 	Site string `uri:"site" binding:"required"`
 }
+
+// BucketParams represents site URI parameter for /storage/:site/:bucket end-point
 type BucketParams struct {
 	SiteParams
 	Bucket string `uri:"bucket" binding:"required"`
 }
+
+// ObjectParams represents site URI parameter for /storage/:site/:bucket/:object end-point
 type ObjectParams struct {
 	BucketParams
 	Object string `uri:"object" binding:"required"`
 }
 
+// GET handlers
+
 // StorageHandler provides access to GET /storage end-point
+/*
+```
+curl http://localhost:8340/storage
+```
+*/
 func StorageHandler(c *gin.Context) {
-	// TODO: implement return site meta-data info
-	c.JSON(200, gin.H{"status": "ok"})
+	data := sites()
+	c.JSON(200, gin.H{"status": "ok", "data": data})
 }
 
 // SiteHandler provides access to GET /storage/:site end-point
+/*
+```
+curl http://localhost:8340/storage/cornell/s3-bucket
+```
+*/
 func SiteHandler(c *gin.Context) {
 	var params SiteParams
 	if err := c.ShouldBindUri(&params); err == nil {
@@ -39,6 +55,11 @@ func SiteHandler(c *gin.Context) {
 }
 
 // BucketHandler provides access to GET /storate/:site/:bucket end-point
+/*
+```
+curl http://localhost:8340/storage/cornell/s3-bucket/archive.zip > archive.zip
+```
+*/
 func BucketHandler(c *gin.Context) {
 	var params BucketParams
 	if err := c.ShouldBindUri(&params); err == nil {
@@ -69,9 +90,10 @@ func FileHandler(c *gin.Context) {
 
 // BucketPostHandler provides access to POST /storate/:site/:bucket end-point
 /*
- * Example of curl call
- * `curl -X POST http://localhost:8340/storage/cornell/s3-bucket`
- */
+```
+curl -X POST http://localhost:8340/storage/cornell/s3-bucket
+ ```
+*/
 func BucketPostHandler(c *gin.Context) {
 	var params BucketParams
 	if err := c.ShouldBindUri(&params); err == nil {
@@ -88,7 +110,6 @@ func BucketPostHandler(c *gin.Context) {
 
 // FilePostHandler provides access to POST /storate/:site/:bucket/:object end-point
 /*
- * Example of curl call
 ```
  curl -X POST http://localhost:8340/storage/cornell/s3-bucket/archive.zip \
   -F "file=@/path/test.zip" \
@@ -98,8 +119,6 @@ func BucketPostHandler(c *gin.Context) {
 func FilePostHandler(c *gin.Context) {
 	var params ObjectParams
 	if err := c.ShouldBindUri(&params); err == nil {
-		// TODO: read data part from HTTP request body
-
 		// single file
 		file, err := c.FormFile("file")
 		if err != nil {
@@ -118,7 +137,7 @@ func FilePostHandler(c *gin.Context) {
 		size := file.Size
 		ctype := "" // TODO: decide on how to read content-type
 
-		if err := uploadObject(
+		if info, err := uploadObject(
 			params.Site,
 			params.Bucket,
 			params.Object,
@@ -126,30 +145,7 @@ func FilePostHandler(c *gin.Context) {
 			reader,
 			size); err == nil {
 			msg := fmt.Sprintf("File %s/%s/%s uploaded successfully", params.Site, params.Bucket, params.Object)
-			c.JSON(200, gin.H{"status": "ok", "msg": msg})
-		} else {
-			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
-		}
-	} else {
-		c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
-	}
-}
-
-// PUT handlers
-
-// BucketPutHandler provides access to PUT /storate/:site/:bucket end-point
-func BucketPutHandler(c *gin.Context) {
-}
-
-// FilePutHandler provides access to PUT /storate/:site/:bucket/:object end-point
-func FilePutHandler(c *gin.Context) {
-	var params ObjectParams
-	if err := c.ShouldBindUri(&params); err == nil {
-		// TODO: read data from HTTP request body
-		var data []byte
-		if err := updateFile(params.Site, params.Bucket, params.Object, data); err == nil {
-			msg := fmt.Sprintf("Bucket %s/%s/%s updated successfully", params.Site, params.Bucket, params.Object)
-			c.JSON(200, gin.H{"status": "ok", "msg": msg})
+			c.JSON(200, gin.H{"status": "ok", "msg": msg, "object": info})
 		} else {
 			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 		}
@@ -162,9 +158,10 @@ func FilePutHandler(c *gin.Context) {
 
 // BucketDeleteHandler provides access to DELETE /storate/:site/:bucket end-point
 /*
- * Example of curl call
- * `curl -X DELETE http://localhost:8340/storage/cornell/s3-bucket`
- */
+```
+curl -X DELETE http://localhost:8340/storage/cornell/s3-bucket
+```
+*/
 func BucketDeleteHandler(c *gin.Context) {
 	var params BucketParams
 	if err := c.ShouldBindUri(&params); err == nil {
@@ -180,6 +177,11 @@ func BucketDeleteHandler(c *gin.Context) {
 }
 
 // BucketDeleteHandler provides access to DELETE /storate/:site/:bucket end-point
+/*
+```
+curl -X DELETE http://localhost:8340/storage/cornell/s3-bucket/archive.zip
+```
+*/
 func FileDeleteHandler(c *gin.Context) {
 	var params ObjectParams
 	if err := c.ShouldBindUri(&params); err == nil {
