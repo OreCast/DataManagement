@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 
@@ -21,11 +20,14 @@ type S3 struct {
 // helper function to get s3 minio client for given site
 func s3client(site string) (*minio.Client, error) {
 	// get s3 site object without any buckets info
-	siteObj := S3Content(site, "")
+	s3, err := site2s3(site)
 	if Config.Verbose > 1 {
-		log.Println("INFO: s3 object %+v", siteObj)
+		log.Println("INFO: s3 object %+v", s3)
 	}
-	s3 := siteObj.S3
+	if err != nil {
+		log.Printf("ERROR: unable to get S3 object for site %s, error %v", site, err)
+		return nil, err
+	}
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(s3.Endpoint, &minio.Options{
@@ -39,8 +41,8 @@ func s3client(site string) (*minio.Client, error) {
 }
 
 // helper function to provide list of buckets in S3 store
-func buckets(s3 S3, bucket string) []string {
-	var out []string
+func listBuckets(s3 S3) ([]minio.BucketInfo, error) {
+	var out []minio.BucketInfo
 	ctx := context.Background()
 	// Initialize minio client object.
 	minioClient, err := minio.New(s3.Endpoint, &minio.Options{
@@ -49,21 +51,25 @@ func buckets(s3 S3, bucket string) []string {
 	})
 	if err != nil {
 		log.Println("ERROR", err)
-		return out
+		return out, err
 	}
 
-	//     log.Printf("%#v\n", minioClient) // minioClient is now set up
-	if bucket == "" {
-		buckets, err := minioClient.ListBuckets(ctx)
-		if err != nil {
-			log.Println("ERROR", err)
-			return out
-		}
-		for _, bucket := range buckets {
-			// fmt.Println(bucket)
-			out = append(out, fmt.Sprintf("%s", bucket))
-		}
-		return out
+	buckets, err := minioClient.ListBuckets(ctx)
+	return buckets, err
+}
+
+// helper function to provide list of buckets in S3 store
+func listObjects(s3 S3, bucket string) ([]minio.ObjectInfo, error) {
+	var out []minio.ObjectInfo
+	ctx := context.Background()
+	// Initialize minio client object.
+	minioClient, err := minio.New(s3.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(s3.AccessKey, s3.AccessSecret, ""),
+		Secure: s3.UseSSL,
+	})
+	if err != nil {
+		log.Println("ERROR", err)
+		return out, err
 	}
 
 	// list individual buckets
@@ -73,12 +79,12 @@ func buckets(s3 S3, bucket string) []string {
 	for object := range objectCh {
 		if object.Err != nil {
 			log.Println("ERROR: unable to list objects in a bucket, error %v", object.Err)
-			return out
+			return out, err
 		}
-		obj := fmt.Sprintf("%v %s %10d %s\n", object.LastModified, object.ETag, object.Size, object.Key)
-		out = append(out, obj)
+		//         obj := fmt.Sprintf("%v %s %10d %s\n", object.LastModified, object.ETag, object.Size, object.Key)
+		out = append(out, object)
 	}
-	return out
+	return out, nil
 }
 
 // helper function to create new bucket in site's S3 store

@@ -47,8 +47,11 @@ curl http://localhost:8340/storage/cornell/s3-bucket
 func SiteHandler(c *gin.Context) {
 	var params SiteParams
 	if err := c.ShouldBindUri(&params); err == nil {
-		data := S3Content(params.Site, "")
-		c.JSON(200, gin.H{"status": "ok", "data": data})
+		if data, err := siteContent(params.Site); err == nil {
+			c.JSON(200, gin.H{"status": "ok", "data": data})
+		} else {
+			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
+		}
 	} else {
 		c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 	}
@@ -63,8 +66,11 @@ curl http://localhost:8340/storage/cornell/s3-bucket/archive.zip > archive.zip
 func BucketHandler(c *gin.Context) {
 	var params BucketParams
 	if err := c.ShouldBindUri(&params); err == nil {
-		data := S3Content(params.Site, params.Bucket)
-		c.JSON(200, gin.H{"status": "ok", "data": data})
+		if data, err := bucketContent(params.Site, params.Bucket); err == nil {
+			c.JSON(200, gin.H{"status": "ok", "data": data})
+		} else {
+			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
+		}
 	} else {
 		c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 	}
