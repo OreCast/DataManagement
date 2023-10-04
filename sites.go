@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	oreConfig "github.com/OreCast/common/config"
 	minio "github.com/minio/minio-go/v7"
 	cryptoutils "github.com/vkuznet/cryptoutils"
 )
@@ -45,8 +46,8 @@ type DiscoveryRecord struct {
 // helper function to fetch sites info from discovery service
 func sites() []Site {
 	var out []Site
-	rurl := fmt.Sprintf("%s/sites", Config.DiscoveryURL)
-	if Config.Verbose > 0 {
+	rurl := fmt.Sprintf("%s/sites", oreConfig.Config.Services.DiscoveryURL)
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Println("query Discovery service", rurl)
 	}
 	resp, err := http.Get(rurl)
@@ -67,11 +68,11 @@ func sites() []Site {
 // helper function to return S3 object for given site
 func site2s3(site string) (S3, error) {
 	var s3 S3
-	if Config.Verbose > 0 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Printf("looking for site:%s", site)
 	}
-	surl := fmt.Sprintf("%s/sites", Config.DiscoveryURL)
-	if Config.Verbose > 0 {
+	surl := fmt.Sprintf("%s/sites", oreConfig.Config.Services.DiscoveryURL)
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Println("query Discovery service", surl)
 	}
 	resp, err := http.Get(surl)
@@ -92,20 +93,20 @@ func site2s3(site string) (S3, error) {
 		log.Printf("ERROR: unable to unmarshal DataDiscovery response, error %v", err)
 		return s3, err
 	}
-	if Config.Verbose > 0 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Printf("site records %+v", records)
 	}
 
 	for _, rec := range records {
 		if rec.Name == site {
 			log.Printf("INFO: found %s in DataDiscovery records, will access its s3 via %s", rec.Name, rec.URL)
-			akey, err := cryptoutils.HexDecrypt(rec.AccessKey, Config.DiscoveryPassword, Config.DiscoveryCipher)
+			akey, err := cryptoutils.HexDecrypt(rec.AccessKey, oreConfig.Config.Encryption.Secret, oreConfig.Config.Encryption.Cipher)
 			if err != nil {
 				log.Printf("ERROR: unable to decrypt data discovery access key, error %v", err)
 				return s3, nil
 
 			}
-			apwd, err := cryptoutils.HexDecrypt(rec.AccessSecret, Config.DiscoveryPassword, Config.DiscoveryCipher)
+			apwd, err := cryptoutils.HexDecrypt(rec.AccessSecret, oreConfig.Config.Encryption.Secret, oreConfig.Config.Encryption.Cipher)
 			if err != nil {
 				log.Printf("ERROR: unable to decrypt data discovery acess secret, error %v", err)
 				return s3, nil
@@ -130,11 +131,11 @@ func siteContent(site string) (SiteObject, error) {
 	if err != nil {
 		return siteObj, err
 	}
-	if Config.Verbose > 0 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Printf("Use %v", s3)
 	}
 	log.Printf("INFO: found %s in DataDiscovery s3ords, will access its s3", site)
-	if Config.Verbose > 0 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Printf("INFO: accessing %+v", s3)
 	}
 	buckets, err := listBuckets(s3)
@@ -155,14 +156,14 @@ func bucketContent(site, bucket string) (BucketObject, error) {
 	if err != nil {
 		return bucketObj, err
 	}
-	if Config.Verbose > 0 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Printf("Use %v", s3)
 	}
-	if Config.Verbose > 0 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Printf("looking for site:%s bucket:%s", site, bucket)
 	}
 	log.Printf("INFO: found %s in DataDiscovery records, will access its s3", site)
-	if Config.Verbose > 0 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 		log.Printf("INFO: accessing %+v", s3)
 	}
 	objects, err := listObjects(s3, bucket)

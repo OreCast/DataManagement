@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	oreConfig "github.com/OreCast/common/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,9 +32,9 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
-func Server(configFile string) {
+func Server() {
 	r := setupRouter()
-	sport := fmt.Sprintf(":%d", Config.Port)
+	sport := fmt.Sprintf(":%d", oreConfig.Config.DataManagement.WebServer.Port)
 	log.Printf("Start HTTP server %s", sport)
 	r.Run(sport)
 }

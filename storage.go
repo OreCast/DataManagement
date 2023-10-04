@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 
+	oreConfig "github.com/OreCast/common/config"
 	minio "github.com/minio/minio-go/v7"
 	credentials "github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -21,7 +22,7 @@ type S3 struct {
 func s3client(site string) (*minio.Client, error) {
 	// get s3 site object without any buckets info
 	s3, err := site2s3(site)
-	if Config.Verbose > 1 {
+	if oreConfig.Config.DataManagement.WebServer.Verbose > 1 {
 		log.Println("INFO: s3 object %+v", s3)
 	}
 	if err != nil {
@@ -104,7 +105,7 @@ func createBucket(site, bucket string) error {
 		// Check to see if we already own this bucket (which happens if you run this twice)
 		exists, errBucketExists := minioClient.BucketExists(ctx, bucket)
 		if errBucketExists == nil && exists {
-			if Config.Verbose > 0 {
+			if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 				log.Printf("WARNING: we already own %s\n", bucket)
 			}
 			return nil
@@ -112,7 +113,7 @@ func createBucket(site, bucket string) error {
 			log.Printf("ERROR: unable to create bucket, error %v", err)
 		}
 	} else {
-		if Config.Verbose > 0 {
+		if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 			log.Printf("Successfully created %s\n", bucket)
 		}
 	}
@@ -156,7 +157,7 @@ func uploadObject(site, bucket, objectName, contentType string, reader io.Reader
 	if err != nil {
 		log.Printf("ERROR: fail to upload file object, error %v", err)
 	} else {
-		if Config.Verbose > 0 {
+		if oreConfig.Config.DataManagement.WebServer.Verbose > 0 {
 			log.Println("INFO: upload file", info)
 		}
 	}
