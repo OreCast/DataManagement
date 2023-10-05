@@ -3,7 +3,7 @@ module github.com/OreCast/DataManagement
 go 1.21.0
 
 require (
-	github.com/OreCast/common/config v0.0.0-20231005114436-f79d6cce30d3
+	github.com/OreCast/common/config v0.0.0-20231005151215-0ba3db61fd7c
 	github.com/gin-gonic/gin v1.9.1
 	github.com/minio/minio-go/v7 v7.0.63
 	github.com/vkuznet/cryptoutils v0.0.2
@@ -46,9 +46,9 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.5.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
