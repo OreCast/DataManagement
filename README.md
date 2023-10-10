@@ -1,4 +1,4 @@
-# DataManagement
+# DataManagement Service
 Data Management for OreCast provides RESTfull access to site's S3 storage.
 It supports the following APIs:
 ```
