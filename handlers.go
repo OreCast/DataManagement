@@ -128,6 +128,7 @@ func FilePostHandler(c *gin.Context) {
 		// single file
 		file, err := c.FormFile("file")
 		if err != nil {
+			log.Println("ERROR: fail to get file from HTTP form", err)
 			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 			return
 		}
@@ -136,6 +137,7 @@ func FilePostHandler(c *gin.Context) {
 		// Upload the file to specific dst.
 		reader, err := file.Open()
 		if err != nil {
+			log.Println("ERROR: fail to open file", err)
 			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 			return
 		}
@@ -153,9 +155,11 @@ func FilePostHandler(c *gin.Context) {
 			msg := fmt.Sprintf("File %s/%s/%s uploaded successfully", params.Site, params.Bucket, params.Object)
 			c.JSON(200, gin.H{"status": "ok", "msg": msg, "object": info})
 		} else {
+			log.Println("ERROR: fail to upload object", err)
 			c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 		}
 	} else {
+		log.Println("ERROR: fail to bind HTTP parameters", err)
 		c.JSON(400, gin.H{"status": "fail", "error": err.Error()})
 	}
 }
